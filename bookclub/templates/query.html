@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Query
+{% endblock %}
+
+{% block main %}
+    <form action="/query" method="post">
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="query" placeholder="Book Query" type="text">
+        </div>
+        <button class="btn btn-primary" type="submit">Submit</button>
+    </form>
+{% endblock %}

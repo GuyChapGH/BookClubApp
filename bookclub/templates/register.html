@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <form id="myform" action="/register" method="post">
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text">
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="password" placeholder="Password" type="password">
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="confirmation" placeholder="Confirmation" type="password">
+        </div>
+        <button class="btn btn-primary" type="submit">Register</button>
+    </form>
+
+<script>
+// Code to communicate with /check was helped by this reference http://flask.pocoo.org/docs/1.0/patterns/jquery/
+
+  $(document).ready(function()
+  {
+      $("form").submit(function()
+        {
+          $.getJSON('/check', {
+              username:$('input[name="username"]').val()
+          }, function(data) {
+                if (!data)
+                {
+                    alert("username not available");
+                    return false;
+                }
+                else
+                {
+
+                    alert("username available");
+                    document.forms["myform"].submit();
+                }
+
+          });
+            return false;
+        });
+});
+
+
+</script>
+{% endblock %}
