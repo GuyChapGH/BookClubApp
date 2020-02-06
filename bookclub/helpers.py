@@ -9,8 +9,10 @@ from datetime import datetime
 import pprint
 import sys
 from apiclient.discovery import build
+
 # Store sensitive key in separate file
-from projectkey import API_KEY
+# from projectkey import API_KEY
+
 
 def apology(message, code=400):
     """Render message as an apology to user."""
@@ -60,7 +62,6 @@ def lookup(query):
 # limitations under the License.
 
 
-
 # For this example, the API key is provided from projectkey file
     api_key = API_KEY
 
@@ -97,61 +98,68 @@ def lookup(query):
 #    book['volumeInfo']['imageLinks']['smallThumbnail'])
 
 # books object is defined. List of dictionaries, one for each item.
-    books = [{'title': None, 'authors': None, 'ISBN': None, 'description': None, 'image': None} for x in range(len(response['items']))]
+    books = [{'title': None, 'authors': None, 'ISBN': None, 'description': None, 'image': None}
+             for x in range(len(response['items']))]
 
 # Loop through all books provided by response
     for i in range(len(response['items'])):
-    #for i in range(10):
+        # for i in range(10):
 
-# Exception handling is used because some keys will be missing from the data   
-        try: response['items'][i]['volumeInfo']['title']
-        except KeyError: 
+        # Exception handling is used because some keys will be missing from the data
+        try:
+            response['items'][i]['volumeInfo']['title']
+        except KeyError:
             books[i]['title'] = 'Not Available'
         else:
             books[i]['title'] = response['items'][i]['volumeInfo']['title']
 
 # Exception handling
-        try: response['items'][i]['volumeInfo']['authors'][0]
+        try:
+            response['items'][i]['volumeInfo']['authors'][0]
         except KeyError:
             books[i]['authors'] = 'Not Available'
         else:
             books[i]['authors'] = response['items'][i]['volumeInfo']['authors'][0]
-    
+
 # Exception handling
-        try: response['items'][i]['volumeInfo']['industryIdentifiers'][0]['identifier']
+        try:
+            response['items'][i]['volumeInfo']['industryIdentifiers'][0]['identifier']
         except KeyError:
             books[i]['ISBN'] = None
         else:
             books[i]['ISBN'] = response['items'][i]['volumeInfo']['industryIdentifiers'][0]['identifier']
-     
+
 # Exception handling
-        try: response['items'][i]['volumeInfo']['description']
+        try:
+            response['items'][i]['volumeInfo']['description']
         except KeyError:
             books[i]['description'] = 'Not Available'
         else:
             books[i]['description'] = response['items'][i]['volumeInfo']['description']
-        
+
 # Exception handling. Default image, if none available, is landscape from Unsplash.com
-        try: response['items'][i]['volumeInfo']['imageLinks']['smallThumbnail']
+        try:
+            response['items'][i]['volumeInfo']['imageLinks']['smallThumbnail']
         except KeyError:
             books[i]['image'] = 'https://images.unsplash.com/photo-1469827160215-9d29e96e72f4?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=500&q=60'
         else:
             books[i]['image'] = response['items'][i]['volumeInfo']['imageLinks']['smallThumbnail']
-    
+
     return books
-    
-    
+
+
 def hudate(datestring):
     """Format date in readable form"""
-    
+
     # Create datetime object from string held in meetings table in database
     date_time_obj = datetime.strptime(datestring, "%Y-%m-%d")
-    
+
     # Convert datetime object into human readable form
     hudatestring = date_time_obj.strftime("%d %b %Y")
-    
+
     return hudatestring
-    
+
+
 def usd(value):
     """Format value as USD."""
-    return f"${value:,.2f}"    
+    return f"${value:,.2f}"
