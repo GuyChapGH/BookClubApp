@@ -11,7 +11,7 @@ import sys
 from apiclient.discovery import build
 
 # Store sensitive key in separate file
-# from projectkey import API_KEY
+from projectkey import API_KEY
 
 
 def apology(message, code=400):

@@ -187,7 +187,10 @@ def login():
         session["user_id"] = rows.id
 
         # Redirect user to home page
-        return redirect("/")
+        # return redirect("/")
+
+        # Redirect user to "/Query" while testing
+        return redirect("/query")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -221,8 +224,16 @@ def query():
             return apology("must provide query", 400)
 
     # Clear database table searchresults of previous data and clear unused space
-        db.execute("DELETE FROM searchresults")
-        db.execute("VACUUM")
+    #    db.execute("DELETE FROM searchresults")
+        try:
+            num_rows_deleted = db.session.query(Searchresults).delete()
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(e)
+
+    # Don't need VACUUM as automatic in Postgresql
+    #    db.execute("VACUUM")
 
     # Request books from lookup function
         books = lookup(request.form.get("query"))
@@ -240,17 +251,31 @@ def query():
         #title = response['items'][5]['volumeInfo']['title']
 
     # SQL query to write books into database table 'searchresults'
+    #    for book in books:
+    #        db.execute("INSERT INTO searchresults (title, authors, ISBN, description, image) VALUES (:title, :authors, :ISBN, :description, :image)",
+    #                   title=book['title'], authors=book['authors'], ISBN=book['ISBN'], description=book['description'], image=book['image'])
+
+    # SQLAlchemy code to add book data to database table searchresults. Committing one row at a time
+
         for book in books:
-            db.execute("INSERT INTO searchresults (title, authors, ISBN, description, image) VALUES (:title, :authors, :ISBN, :description, :image)",
-                       title=book['title'], authors=book['authors'], ISBN=book['ISBN'], description=book['description'], image=book['image'])
+            new_row = Searchresults(book['title'], book['authors'],
+                                    book['ISBN'], book['description'], book['image'])
+            db.session.add(new_row)
+
+    # Commit new_row
+            try:
+                db.session.commit()
+            except Exception as e:
+                print (e)
 
     # SQL query to get searchresults from database
-        rows = db.execute(
-            "SELECT queryID, title, authors, ISBN FROM searchresults")
+    #    rows = db.execute(
+    #        "SELECT queryID, title, authors, ISBN FROM searchresults")
 
        # return render_template("queryresponse.html", booktitle = booktitle, authors = authors, isbn = isbn, description = description, image = image)
        # return render_template("queryresponse.html", books=books)
-        return render_template("queryresponse.html", books=rows)
+       # Add SQLAlchemy to render_template to get searchresults from database
+        return render_template("queryresponse.html", books=Searchresults.query.all())
 
 
 @app.route("/register", methods=["GET", "POST"])
