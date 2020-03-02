@@ -8,18 +8,18 @@
     <main class="container p-5">
 
         {% for meeting in meetings %}
-        
+
         <div id="booktitle">
             <hr>
-            <h2>  {{ meeting['title'] }} by {{ meeting['authors'] }}</h2>
+            <h2>  {{ meeting.title }} by {{ meeting.authors }}</h2>
             <br>
-            <h3> {{ meeting['meetingDATE'] }}</h3>
+            <h3> {{ meeting.meetingDATE }}</h3>
         </div>
-        <div id= "picture"> <img class = "img-thumbnail" width="150" height="150" alt="book image" src="{{ meeting['image'] }}"> </div>
+        <div id= "picture"> <img class = "img-thumbnail" width="150" height="150" alt="book image" src="{{ meeting.image }}"> </div>
            <p>
-           {{ meeting['description'] }} 
+           {{ meeting.description }} 
            </p>
-       
+
        {% endfor %}
 
 

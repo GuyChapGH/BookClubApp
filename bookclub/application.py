@@ -94,7 +94,7 @@ class Searchresults(db.Model):
 
 class Meetings(db.Model):
     meetingID = db.Column(db.Integer, primary_key=True)
-    meetingDATE = db.Column(db.DateTime, nullable=False)
+    meetingDATE = db.Column(db.DateTime, unique=True, nullable=False)
     location = db.Column(db.Text, nullable=True)
     id = db.Column(db.Integer, nullable=True)
     queryID = db.Column(db.Integer, nullable=True)
@@ -121,14 +121,18 @@ class Meetings(db.Model):
 def index():
     """Show book club meetings"""
     # SQL query to capture meetings ahead of or on today's date
-    rows = db.execute(
-        "SELECT * FROM meetings WHERE meetingDATE >= date('now', 'localtime')")
+    # rows = db.execute(
+    #    "SELECT * FROM meetings WHERE meetingDATE >= date('now', 'localtime')")
 
     # Loop through rows replacing machine date with human readable format
-    for i in range(len(rows)):
-        rows[i]['meetingDATE'] = hudate(rows[i]['meetingDATE'])
+    # for i in range(len(rows)):
+    #    rows[i]['meetingDATE'] = hudate(rows[i]['meetingDATE'])
 
-    return render_template("index.html", meetings=rows)
+    # SQLAlchemy to filter only for meetings after today's date and order by meetingDATE
+
+    todays_datetime = datetime.today()
+
+    return render_template("index.html", meetings=Meetings.query.filter(Meetings.meetingDATE >= todays_datetime).order_by(Meetings.meetingDATE).all())
 
 
 @app.route("/buy", methods=["GET", "POST"])
@@ -187,10 +191,10 @@ def login():
         session["user_id"] = rows.id
 
         # Redirect user to home page
-        # return redirect("/")
+        return redirect("/")
 
         # Redirect user to "/Query" while testing
-        return redirect("/query")
+        # return redirect("/query")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -361,17 +365,45 @@ def assign():
         user_id = session["user_id"]
 
         # Attempt to insert meetingdate and user_id into meetings table, check for meeting date availability (meetingDATE is unique field)
-        result = db.execute("INSERT INTO meetings (meetingDATE, id) VALUES (:meetingdate, :user_id)",
-                            meetingdate=request.form.get("meetingdate"), user_id=user_id)
+        # result = db.execute("INSERT INTO meetings (meetingDATE, id) VALUES (:meetingdate, :user_id)",
+        #                     meetingdate=request.form.get("meetingdate"), user_id=user_id)
+
+        meetingdate = request.form.get("meetingdate")
+
+        # Use of 'None' should line up values with their correct columns in the meetings table
+
+        new_meeting = Meetings(meetingdate, None, user_id, None, None, None, None, None, None)
+
+        db.session.add(new_meeting)
+
+        # Need to handle exception in the case that the meetingDATE is already taken. MeetingDATE
+        # is unique therefore commit() will fail. NEED TO IMPROVE ERROR HANDLING HERE
+        result = True
+        try:
+            db.session.commit()
+        except Exception as e:
+            print (e)
+            result = False
 
         if not result:
             return apology("Meeting date not available", 400)
 
         # Add book details to meetingDATE row in meetings table by SELECT from searchresults table
-        res = db.execute("UPDATE meetings SET queryID = (SELECT queryID FROM searchresults WHERE queryID = :searchresult), title = (SELECT title FROM searchresults WHERE queryID = :searchresult), authors = (SELECT authors FROM searchresults WHERE queryID = :searchresult), ISBN = (SELECT ISBN FROM searchresults WHERE queryID = :searchresult), description = (SELECT description FROM searchresults WHERE queryID = :searchresult), image = (SELECT image FROM searchresults WHERE queryID = :searchresult) WHERE meetingDATE = :meetingdate",
-                         meetingdate=request.form.get("meetingdate"), searchresult=request.form.get("searchresult"))
+        # Can't find ORM method to do this therefore going to use raw SQL. Note use of single quotes around query and
+        # double quotes around column titles. Postgresql automatically converts column titles to lowercase
+        # otherwise.
 
-        if not res:
+        flag = True
+        try:
+            db.session.execute('UPDATE meetings SET "queryID" = searchresults."queryID", title = searchresults.title, authors = searchresults.authors, "ISBN" = searchresults."ISBN", description = searchresults.description, image = searchresults.image FROM searchresults WHERE searchresults."queryID" = :searchresult AND meetings."meetingDATE" = :meetingdate', {
+                'meetingdate': request.form.get("meetingdate"), 'searchresult': request.form.get("searchresult")})
+            db.session.commit()
+
+        except Exception as e:
+            print (e)
+            flag = False
+
+        if not flag:
             return apology("book details not inserted")
 
         return redirect("/")
